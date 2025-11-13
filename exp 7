@@ -1,0 +1,30 @@
+# show version & current rules
+iptables -V
+sudo iptables -L -v --line-numbers
+# set default policies to DROP
+sudo iptables -P INPUT DROP
+sudo iptables -P OUTPUT DROP
+sudo iptables -P FORWARD DROP
+# allow loopback and established traffic
+sudo iptables -A INPUT -i lo -j ACCEPT
+sudo iptables -A OUTPUT -o lo -j ACCEPT
+sudo iptables -A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+sudo iptables -A OUTPUT -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
+# allow SSH from specific IP
+sudo iptables -A INPUT -p tcp --dport 22 -s 10.0.2.7 -m state --state NEW,ESTABLISHED -j ACCEPT
+sudo iptables -A OUTPUT -p tcp --sport 22 -d 10.0.2.7 -m state --state ESTABLISHED -j ACCEPT
+# allow ICMP (ping)
+sudo iptables -A INPUT -p icmp --icmp-type echo-request -j ACCEPT
+sudo iptables -A OUTPUT -p icmp --icmp-type echo-reply -j ACCEPT
+# list rules
+sudo iptables -L -v --line-numbers
+# delete a rule by number (example)
+sudo iptables -D INPUT 2
+# flush all rules (if needed)
+sudo iptables -F
+# save rules (Debian/Ubuntu example)
+sudo apt install -y iptables-persistent
+sudo netfilter-persistent save
+# or save manually
+sudo /sbin/iptables-save > /etc/iptables/rules.v4
+
