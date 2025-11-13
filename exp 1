@@ -1,0 +1,12 @@
+sudo apt update && sudo apt install -y build-essential libpcap-dev libpcre3-dev libdumbnet-dev bison flex zlib1g-dev
+# (optional) download & install DAQ/snort from source or use distro package:
+# example (Snort 2.x binary via apt on Debian/Ubuntu might not be available): use source build steps if needed
+sudo useradd -r -s /sbin/nologin snort || true
+sudo mkdir -p /etc/snort /var/log/snort /usr/local/lib/snort_dynamicrules
+sudo chown -R snort:snort /etc/snort /var/log/snort /usr/local/lib/snort_dynamicrules || true
+# copy/edit snort.conf (manually)
+sudo nano /etc/snort/snort.conf
+# test config
+sudo snort -T -c /etc/snort/snort.conf
+# run Snort in IDS mode on interface (replace eth0)
+sudo snort -A console -q -c /etc/snort/snort.conf -i eth0
