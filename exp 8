@@ -1,0 +1,51 @@
+# on Router1 (R1)
+enable
+configure terminal
+hostname R1
+interface GigabitEthernet0/0
+ ip address 10.0.0.1 255.255.255.0
+ no shutdown
+exit
+crypto isakmp policy 10
+ encr aes
+ hash sha
+ authentication pre-share
+ group 2
+exit
+crypto isakmp key MyPskKey address 10.0.1.1
+crypto ipsec transform-set TS esp-aes esp-sha-hmac
+access-list 100 permit ip 192.168.1.0 0.0.0.255 192.168.2.0 0.0.0.255
+crypto map CMAP 10 ipsec-isakmp
+ set peer 10.0.1.1
+ set transform-set TS
+ match address 100
+interface GigabitEthernet0/0
+ crypto map CMAP
+exit
+write memory
+
+# on Router2 (R2) (mirror config)
+enable
+configure terminal
+hostname R2
+interface GigabitEthernet0/0
+ ip address 10.0.1.1 255.255.255.0
+ no shutdown
+exit
+crypto isakmp policy 10
+ encr aes
+ hash sha
+ authentication pre-share
+ group 2
+exit
+crypto isakmp key MyPskKey address 10.0.0.1
+crypto ipsec transform-set TS esp-aes esp-sha-hmac
+access-list 100 permit ip 192.168.2.0 0.0.0.255 192.168.1.0 0.0.0.255
+crypto map CMAP 10 ipsec-isakmp
+ set peer 10.0.0.1
+ set transform-set TS
+ match address 100
+interface GigabitEthernet0/0
+ crypto map CMAP
+exit
+write memory
