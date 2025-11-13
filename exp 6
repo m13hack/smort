@@ -1,0 +1,24 @@
+# install prerequisites
+sudo apt update && sudo apt install -y python3 python3-scapy tcpdump wireshark
+# ensure loopback alias exists
+sudo ip addr add 127.0.0.2/8 dev lo || true
+# start capture (capture 5 packets then stop automatically)
+sudo tcpdump -i lo -c 5 icmp -w /tmp/icmp_spoof_loop.pcap &
+# create Scapy script
+cat > ~/send_spoof_loop.py <<'PY'
+#!/usr/bin/env python3
+from scapy.all import *
+conf.verb = 1
+TARGET = "127.0.0.2"
+SPOOF_SRC = "1.2.3.4"
+IFACE = "lo"
+pkt = IP(src=SPOOF_SRC, dst=TARGET)/ICMP(type=8)/b"loopback-spoof"
+send(pkt, iface=IFACE, count=5, inter=0.5)
+print("Sent 5 spoofed ICMP packets from", SPOOF_SRC, "to", TARGET)
+PY
+chmod +x ~/send_spoof_loop.py
+# run sender (root required)
+sudo python3 ~/send_spoof_loop.py
+# inspect pcap
+sudo tcpdump -nn -r /tmp/icmp_spoof_loop.pcap
+# (or open) wireshark /tmp/icmp_spoof_loop.pcap &
